@@ -1,0 +1,10 @@
+python-fasthtml
+python-multipart
+websockets
+aiofiles
+python-dotenv
+deepgram-sdk>=3.0.0
+cohere
+pinecone
+httpx
+uvicorn 
