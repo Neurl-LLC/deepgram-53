@@ -1,0 +1,17 @@
+# Voice Archive API Keys Template
+# Copy this content to a new file named ".env" and fill in your actual API keys
+
+# Deepgram API Key - Get from https://deepgram.com/
+DEEPGRAM_API_KEY=your_deepgram_api_key_here
+
+# Cohere API Key - Get from https://cohere.ai/
+COHERE_API_KEY=your_cohere_api_key_here
+
+# Pinecone API Key - Get from https://pinecone.io/
+PINECONE_API_KEY=your_pinecone_api_key_here
+
+# Pinecone Index Host - Found in your Pinecone dashboard
+PINECONE_INDEX_HOST=your_pinecone_index_host_here
+
+# Example Pinecone host format:
+# PINECONE_INDEX_HOST=your-index-12345.svc.us-west1-gcp.pinecone.io 
