@@ -118,14 +118,45 @@ app = FastHTML(
         Script(
             """
             document.addEventListener('click', (e) => {
-              const t = e.target.closest('[data-start]');
-              if (!t) return;
-              const start = parseFloat(t.getAttribute('data-start') || '0');
-              const player = document.getElementById('player');
-              if (player) {
-                player.currentTime = start;
-                player.play().catch(()=>{});
-              }
+                const t = e.target.closest('[data-start]');
+                if (!t) return;
+
+                e.preventDefault();
+                e.stopPropagation();
+
+                const start   = parseFloat(t.getAttribute('data-start') || '0') || 0;
+                const session = t.getAttribute('data-session') || '';
+
+                // Prefer a player that already corresponds to this session
+                let player = session ? document.querySelector(`audio[data-session="${session}"]`) : null;
+                // Optional global fallback (if you later add <audio id="player"> somewhere):
+                if (!player) player = document.getElementById('player');
+                if (!player) return;
+
+                const targetSrc = session ? `/audio/${session}` : (player.getAttribute('src') || player.currentSrc || '');
+
+                // If this player is already bound to a different session, or has a different src, swap.
+                const currentSrc = player.currentSrc || player.getAttribute('src') || '';
+                const currentSession = player.dataset ? player.dataset.session || '' : '';
+                const needsSwap = (session && currentSession && currentSession !== session) ||
+                                    (targetSrc && currentSrc && !currentSrc.endsWith(targetSrc));
+
+                const seekAndPlay = () => {
+                    try { player.currentTime = Math.max(0, start - 0.05); } catch (_) {}
+                    player.play().catch(() => {}); // user gesture already occurred
+                };
+
+                if (needsSwap) {
+                    player.pause();
+                    player.src = targetSrc;
+                    if (player.dataset) player.dataset.session = session;
+                    player.load();
+                    player.addEventListener('loadedmetadata', seekAndPlay, { once: true });
+                } else if (player.readyState >= 1) { // HAVE_METADATA
+                    seekAndPlay();
+                } else {
+                    player.addEventListener('loadedmetadata', seekAndPlay, { once: true });
+                }
             });
             """
         ),
@@ -176,6 +207,32 @@ app = FastHTML(
             """
             
             ),
+
+        Script(
+            """
+            function isPost(el, path){
+            const f = el && el.closest('form');
+            return f && f.getAttribute('hx-post') === path;
+            }
+            function flash(node){
+            const prev = node.style.boxShadow;
+            node.style.boxShadow = '0 0 0 2px rgba(16,185,129,0.9) inset';
+            setTimeout(() => { node.style.boxShadow = prev || ''; }, 900);
+            }
+            document.addEventListener('htmx:afterSwap', function (e) {
+            const el = e.detail && e.detail.elt;
+            if (isPost(el, '/upload-file')) {
+                const tgt = document.getElementById('upload-status');
+                if (tgt) { tgt.scrollIntoView({ behavior: 'smooth', block: 'start' }); flash(tgt); }
+            }
+            if (isPost(el, '/process-url')) {
+                const tgt = document.getElementById('url-status');
+                if (tgt) { tgt.scrollIntoView({ behavior: 'smooth', block: 'start' }); flash(tgt); }
+            }
+            });
+            """
+            ),
+
         Script(
             """
             function isSearchForm(el){ const f = el && el.closest('form'); return f && f.getAttribute('hx-post') === '/search'; }
@@ -259,7 +316,7 @@ def homepage():
             Div(
                 Img(src="/static/deepgram-logo.svg", alt="Deepgram", cls="h-8"),
                 Div(
-                    Span("Voice Archive Search", cls="text-xl font-semibold text-white"),
+                    Span("Voice Archive Search with Deepgram's Nova-3 STT API", cls="text-xl font-semibold text-white"),
                     Span("Semantic search over call & meeting audio (for tutorial/demo purposes only)", cls="text-sm text-gray-300"),
                     cls="flex flex-col ml-1 md:ml-2 text-center md:text-left",
                 ),
@@ -310,12 +367,15 @@ def homepage():
                     type="submit",
                     cls="w-full dg-btn dg-btn--primary",
                 ),
+
+                Div(id="upload-status", cls="mt-3"),
+
                 # FastHTML/Starlette props + HTMX config for AJAX-like posting
                 action="/upload-file",
                 method="post",
                 enctype="multipart/form-data",
                 hx_post="/upload-file",
-                hx_target="#ingest-container",      # Returned HTML fragment will be inserted here
+                hx_target="#upload-status",      # Returned HTML fragment will be inserted here
                 hx_indicator="#loading-indicator",   # Show spinner while request is in-flight
             ),
             cls="dg-section mb-8 p-6 shadow-soft bg-dg-card",
@@ -340,8 +400,11 @@ def homepage():
                     type="submit",
                     cls="w-full dg-btn dg-btn--primary",
                 ),
+
+                Div(id="url-status", cls="mt-3"),
+
                 hx_post="/process-url",
-                hx_target="#ingest-container",
+                hx_target="#url-status",
                 hx_indicator="#loading-indicator",
             ),
             cls="dg-section mb-8 p-6 shadow-soft bg-dg-card",
@@ -367,17 +430,52 @@ def homepage():
                 
                 # Result size + similarity threshold slider
                 Div(
-                    Label("Results:", cls="block text-sm text-gray-300 mb-1"),
-                    Select(
-                        Option("5", value="5"),
-                        Option("10", value="10", selected=True),
-                        Option("20", value="20"),
-                        name="top_k",
-                        cls="p-2 border border-dg-border rounded bg-black/30 text-gray-100 mr-4",
+                    Div(
+                        Label("Results:", cls="block text-sm text-gray-300 mb-1"),
+                        Select(
+                            Option("5", value="5"),
+                            Option("10", value="10", selected=True),
+                            Option("20", value="20"),
+                            name="top_k",
+                            cls="w-full p-2 border border-dg-border rounded bg-black/30 text-gray-100",
+                        ),
+                        cls="control-group",
                     ),
-                    Label("Similarity threshold:", cls="block text-sm text-gray-300 mb-1 mt-4"),
-                    Input(type="range", name="threshold", min="0", max="1", step="0.01", value="0.7", cls="w-full"),
-                    cls="mb-4",
+                    Div(
+                        Label("Similarity threshold:", cls="block text-sm text-gray-300 mb-1"),
+                        Input(
+                            type="range",
+                            name="threshold",
+                            min="0",
+                            max="1",
+                            step="0.01",
+                            value="0.7",
+                            cls="w-full",
+                        ),
+                        cls="control-group",
+                    ),
+                    cls="controls-row",
+                ),
+
+                # Session scope (hidden id + toggle + label)
+                Input(type="hidden", name="session_scope", id="session_scope"),
+                Div(
+                    Input(type="checkbox", name="limit_to_session", id="limit_to_session", checked=True),
+                    Label(" Limit to current file", **{"for": "limit_to_session"}, cls="ml-2 text-sm text-gray-300"),
+                    Span("", id="session_file_label", cls="ml-2 text-xs text-gray-400"),
+                    cls="flex items-center gap-2 mb-3",
+                ),
+
+                Button(
+                    "Clear file scope",
+                    type="button",
+                    onclick=(
+                        "document.getElementById('session_scope').value='';"
+                        "document.getElementById('limit_to_session').checked=false;"
+                        "document.getElementById('session_file_label').textContent='';"
+                    ),
+                    title="Search across all past files",
+                    cls="dg-btn dg-btn--secondary dg-btn--inline",
                 ),
 
                 # --- Evaluation (optional) ----------------------------------------------------
@@ -402,7 +500,7 @@ def homepage():
                         ),
                         cls="mt-2",
                     ),
-                    cls="mb-3",
+                    cls="mb-3 mt-3",
                 ),
                 # ----------------------------------------------------------------------------- 
                 
@@ -438,7 +536,7 @@ def homepage():
         ),
 
         # Target container for upload/URL processing (keeps the <audio id="player"> persistent)
-        Div(id="ingest-container", cls="mt-8"),
+        # Div(id="ingest-container", cls="mt-8"),
 
         # Target container for search results (separate so Play can still find #player)
         #Div(id="search-results", cls="mt-8"),
@@ -658,6 +756,8 @@ def search_archives(
     threshold: float = 0.7,
     gold_ids: str = "",   # <- textarea content (optional)
     show_ids: str = "",   # <- "on" when the checkbox is checked
+    session_scope: str = "",
+    limit_to_session: str = "",
 ):
     """
     HTMX handler for search UI submissions.
@@ -669,7 +769,11 @@ def search_archives(
     logger.info(f"🔍 ***** Starting search: {query} (top_k={top_k}, threshold={threshold})")
 
     try:
-        matches = query_index(query, NAMESPACE, top_k)
+        flt = None
+        if (limit_to_session == "on") and session_scope:
+            flt = {"session": {"$eq": session_scope}}
+
+        matches = query_index(query, NAMESPACE, top_k, flt)
 
         # Collect predicted IDs in ranked order
         pred_ids = [m.id for m in matches if getattr(m, "id", None)]
@@ -739,7 +843,8 @@ def search_archives(
                     Div(
                         Span(f"[{start:.2f}-{end:.2f}]", cls="text-xs text-gray-400 mr-2"),
                         Span(f"Speaker {speaker}", cls="dg-chip"),
-                        Button("▶ Play", **{"data-start": start},
+                        Button("▶ Play", **{"data-start": start, "data-session": match.metadata.get("session", "")},
+                               type="button",
                                cls="ml-3 dg-btn dg-btn--play"),
                         cls="flex items-center mb-2",
                     ),
@@ -792,6 +897,7 @@ def get_audio(session_id: str):
 def success_response(session_id: str, transcript: str, filename: str, segments_count: int):
     """
     Renders a success 'card' after processing, including transcript preview and audio player.
+    Also sets the search form's session scope to this session.
     """
     return Div(
         Details(
@@ -802,9 +908,11 @@ def success_response(session_id: str, transcript: str, filename: str, segments_c
 
                 Div(
                     Audio(
-                        Source(src=f"/audio/{session_id}"),
                         controls=True,
-                        id="player",
+                        id=f"player-{session_id}",
+                        **{"data-session": session_id},  # <-- IMPORTANT for play-by-segment
+                        src=f"/audio/{session_id}",
+                        preload="auto",
                         cls="w-full",
                     ),
                     P("Tip: use the ▶ buttons on results to jump to the exact moment.", cls="text-xs text-gray-400 mt-1"),
@@ -831,6 +939,17 @@ def success_response(session_id: str, transcript: str, filename: str, segments_c
                 cls="p-2",
             ),
         ),
+        # Set/refresh the session scope on the search form
+        Script(f"""
+        (function(){{
+          var s = document.getElementById('session_scope');
+          if (s) s.value = '{session_id}';
+          var cb = document.getElementById('limit_to_session');
+          if (cb) cb.checked = true;
+          var lbl = document.getElementById('session_file_label');
+          if (lbl) lbl.textContent = '(scoped to: {filename})';
+        }})();
+        """),
         cls="dg-card bg-dg-card p-4"
     )
 

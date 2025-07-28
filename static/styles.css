@@ -198,3 +198,20 @@ html, body { background-color: #121212; height: 100%; }
 /* Result list parity (optional) */
 .result-item { transition: box-shadow .25s ease, border-color .25s ease; }
 .similarity-score { color: #13ef95; font-weight: 700; font-size: .85rem; }
+
+.controls-row {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-end; /* keeps the slider baseline aligned with the select */
+  margin-bottom: 1rem;
+}
+.control-group { flex: 1; }
+.control-group label {
+  display: block;
+  margin-bottom: .5rem;
+  font-weight: 600;
+  color: #cccccc;
+}
+
+/* inline utility for small, auto-width buttons inside form rows */
+.dg-btn--inline { width:auto; padding:.45rem .7rem; font-size:.85rem; border-radius:8px; }

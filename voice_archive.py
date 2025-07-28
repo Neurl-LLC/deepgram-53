@@ -438,7 +438,7 @@ def upsert_segments(namespace: str, segments: List[Segment]) -> int:
     return len(pine_vectors)
 
 
-def query_index(query_text: str, namespace: str = NAMESPACE, top_k: int = 5):
+def query_index(query_text: str, namespace: str = NAMESPACE, top_k: int = 5, flt: dict | None = None):
     """
     Embed the user's query and retrieve top_k nearest segments from Pinecone.
 
@@ -451,12 +451,15 @@ def query_index(query_text: str, namespace: str = NAMESPACE, top_k: int = 5):
         Pinecone matches (each includes .id, .score, .metadata).
     """
     query_embedding = generate_embeddings([query_text])[0]
-    results = index.query(
+    kwargs = dict(
         namespace=namespace,
         vector=query_embedding,
         top_k=top_k,
-        include_metadata=True,  # We want text, timestamps, speakers back
+        include_metadata=True,       # We want text, timestamps, speakers back
     )
+    if flt:
+        kwargs["filter"] = flt
+    results = index.query(**kwargs)
     return results.matches
 
 
