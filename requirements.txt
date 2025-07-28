@@ -1,10 +1,20 @@
+# Web/UI
 python-fasthtml
 python-multipart
-websockets
 aiofiles
-python-dotenv
-deepgram-sdk>=3.0.0
-cohere
-pinecone
-httpx
-uvicorn 
+httpx>=0.27.0
+uvicorn[standard]>=0.29.0   # includes watchfiles, websockets, httptools
+# (starlette is pulled in by FastHTML; add an explicit pin if your env complains)
+# starlette>=0.37.2
+
+# Config
+python-dotenv>=1.0.1
+
+# STT / Embeddings / Vector DB
+deepgram-sdk>=3.0.1
+cohere>=5.10.0              # needed for ClientV2 + embed-v4.0
+pinecone>=3.2.0             # serverless client; Index(host=...) pattern
+
+# Optional: if you wire in notebooks or plotting later
+# jupyter
+# matplotlib

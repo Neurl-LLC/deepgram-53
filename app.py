@@ -365,7 +365,7 @@ def homepage():
                 # 🔽 Put results *here*, right after the search form (so users see them immediately)
                 Div(id='search-results', cls='mt-6', **{'aria-live': 'polite'}),
                 
-                # Result size + similarity threshold
+                # Result size + similarity threshold slider
                 Div(
                     Label("Results:", cls="block text-sm text-gray-300 mb-1"),
                     Select(
@@ -379,6 +379,33 @@ def homepage():
                     Input(type="range", name="threshold", min="0", max="1", step="0.01", value="0.7", cls="w-full"),
                     cls="mb-4",
                 ),
+
+                # --- Evaluation (optional) ----------------------------------------------------
+                Details(
+                    Summary("📏 Evaluation (optional)", cls="cursor-pointer text-sm text-gray-300"),
+                    Div(
+                        P(
+                            "Paste relevant vector IDs (one per line or comma-separated). "
+                            "Tip: enable 'Show result IDs' to copy the right values.",
+                            cls="text-xs text-gray-400 mb-2",
+                        ),
+                        Textarea(
+                            name="gold_ids",
+                            placeholder="e.g.\n123e4567:file.wav:0\n123e4567:file.wav:3",
+                            cls="w-full p-3 border border-dg-border rounded-lg bg-black/30 text-gray-100 text-xs",
+                            rows=4,
+                        ),
+                        Div(
+                            Input(type="checkbox", name="show_ids", value="on", id="show_ids_cb"),
+                            Label(" Show result IDs", **{"for": "show_ids_cb"}, cls="ml-2 text-sm text-gray-300"),
+                            cls="mt-2",
+                        ),
+                        cls="mt-2",
+                    ),
+                    cls="mb-3",
+                ),
+                # ----------------------------------------------------------------------------- 
+                
                 # Inline loading bar indicator for searches
                 Div(
                     Div(id="search-progress-bar",
@@ -625,7 +652,13 @@ async def process_audio_realtime(audio_path: str, session_id: str, filename: str
 # Route: Search results
 # ------------------------------------------------------------------------------
 @app.post("/search")
-def search_archives(query: str, top_k: int = 10, threshold: float = 0.7):
+def search_archives(
+    query: str,
+    top_k: int = 10,
+    threshold: float = 0.7,
+    gold_ids: str = "",   # <- textarea content (optional)
+    show_ids: str = "",   # <- "on" when the checkbox is checked
+):
     """
     HTMX handler for search UI submissions.
 
@@ -637,6 +670,33 @@ def search_archives(query: str, top_k: int = 10, threshold: float = 0.7):
 
     try:
         matches = query_index(query, NAMESPACE, top_k)
+
+        # Collect predicted IDs in ranked order
+        pred_ids = [m.id for m in matches if getattr(m, "id", None)]
+
+        # Parse gold ids (textarea supports newline or comma separated)
+        gold_text = (gold_ids or "").replace(",", "\n")
+        gold_set = {line.strip() for line in gold_text.splitlines() if line.strip()}
+
+        # Build an evaluation summary card if gold was provided
+        eval_card = None
+        if gold_set:
+            k = min(top_k, len(pred_ids))
+            score_ndcg = ndcg_at_k(pred_ids, gold_set, k)
+            score_recall = recall_at_k(pred_ids, gold_set, k)
+            score_mrr = mrr(pred_ids, gold_set)
+            eval_card = Div(
+                H4("📊 Evaluation", cls="text-lg font-semibold mb-2 text-gray-100"),
+                Ul(
+                    Li(Strong(f"nDCG@{k}: "), f"{score_ndcg:.3f}", cls="mb-1"),
+                    Li(Strong(f"Recall@{k}: "), f"{score_recall:.3f}", cls="mb-1"),
+                    Li(Strong("MRR: "), f"{score_mrr:.3f}"),
+                ),
+                cls="dg-card p-4 mb-4",
+            )
+
+        # Checkbox handler: show IDs on each result card if requested
+        show_ids_flag = (show_ids == "on")
 
         # Cosine similarity: typically 0..1 (higher is better)
         filtered_matches = [m for m in matches if m.score is not None and m.score >= threshold]
@@ -666,6 +726,12 @@ def search_archives(query: str, top_k: int = 10, threshold: float = 0.7):
             else:
                 snippet_node = P(text, cls="text-gray-100 leading-relaxed")
 
+            # Optional ID line to help users build gold sets
+            id_line = (
+                    Div(Span(f"id: {match.id}", cls="text-[11px] text-gray-400 font-mono"))
+                    if show_ids_flag else None
+                )
+            
             card = Div(
                 Div(
                     Div(Strong(f"Similarity: {match.score:.3f}"),
@@ -678,6 +744,7 @@ def search_archives(query: str, top_k: int = 10, threshold: float = 0.7):
                         cls="flex items-center mb-2",
                     ),
                     snippet_node,
+                    id_line,
                     cls="p-4",
                 ),
                 cls="bg-dg-card border border-dg-border rounded-lg shadow-soft",
@@ -686,6 +753,7 @@ def search_archives(query: str, top_k: int = 10, threshold: float = 0.7):
 
         return Div(
             H3(f"🎯 Search Results ({len(filtered_matches)} found)", cls="text-xl font-semibold mb-4 text-gray-100"),
+            eval_card if eval_card else "",               # <-- metrics summary (optional)
             Div(*result_cards, cls="space-y-4"),
             cls="mt-6",
         )

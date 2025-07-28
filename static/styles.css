@@ -1,0 +1,112 @@
+/* Deepgram base styles (provided) */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { background-color: #121212; height: 100%; }
+.app {
+  background-color: #121212;
+  color: #ffffff;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 2rem;
+  font-family: sans-serif;
+}
+.header { margin-top: 30px; margin-bottom: 1rem; }
+.file-upload { display: flex; gap: 2rem; margin-bottom: 2rem; justify-content: center; }
+.file-label { display: flex; flex-direction: column; align-items: center; gap: 0.5rem; font-size: 0.9rem; }
+.file-input {
+  background-color: #000;
+  color: #fff;
+  font-weight: bold;
+  padding: 1rem 2rem;
+  border-radius: 8px;
+  font-size: 1rem;
+  border: 2px solid transparent;
+  background-image: linear-gradient(#000, #000),
+                    linear-gradient(90deg, rgb(32, 28, 255) -91.5%, rgb(19, 239, 149) 80.05%);
+  background-origin: border-box;
+  background-clip: padding-box, border-box;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(19, 239, 149, 0.3);
+}
+.file-input::-webkit-file-upload-button { visibility: hidden; }
+.file-input::before { content: 'Choose File'; display: inline-block; color: #fff; }
+.video-container { margin-bottom: 1rem; }
+.transcript-box {
+  width: 80%;
+  max-width: 700px;
+  padding: 1rem;
+  background-color: #1e1e1e;
+  border-radius: 10px;
+  min-height: 60px;
+  white-space: pre-wrap;
+  line-height: 1.6;
+  font-weight: bold;
+  font-size: 1.1rem;
+  color: #ffffff;
+  border: 2px solid silver;
+  text-align: center;
+}
+
+/* show the search indicator when HTMX toggles the htmx-request class */
+#search-indicator { display: none; }
+#search-indicator.htmx-request { display: block; }
+
+/* Small addition for the HTMX search loading bar */
+#search-indicator.htmx-request #search-progress-bar {
+  width: 60%;
+}
+
+/* ===== Deepgram-styled buttons ===== */
+.dg-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: .4rem;
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  font-weight: 700;
+  border-radius: 10px;
+  padding: .8rem 1.2rem;
+  border: 2px solid transparent;
+  background-image:
+    linear-gradient(#000, #000),
+    linear-gradient(90deg, rgb(32, 28, 255) -91.5%, rgb(19, 239, 149) 80.05%);
+  background-origin: border-box;
+  background-clip: padding-box, border-box;
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(19, 239, 149, 0.25);
+  transition: transform .06s ease, box-shadow .2s ease, opacity .2s ease;
+}
+.dg-btn:hover { opacity: .95; }
+.dg-btn:active { transform: translateY(1px); }
+.dg-btn--primary { /* same as base */ }
+.dg-btn--secondary {
+  background-image:
+    linear-gradient(#0f0f0f, #0f0f0f),
+    linear-gradient(90deg, rgba(32,28,255,.6) -91.5%, rgba(19,239,149,.6) 80.05%);
+}
+.dg-btn--play {
+  padding: .45rem .7rem;
+  border-radius: 8px;
+  font-size: .85rem;
+}
+.dg-chip {
+  background-color: #000;
+  color: #e5e7eb;
+  border: 1px solid #1f2937;
+  padding: .15rem .45rem;
+  border-radius: 6px;
+  font-size: .75rem;
+  font-weight: 600;
+}
+
+/* Optional: subtle card borders match buttons */
+.dg-card {
+  background-color: #0F141A;
+  border: 1px solid #1F2937;
+  border-radius: 12px;
+  box-shadow: 0 4px 14px rgba(0,0,0,.25);
+}
