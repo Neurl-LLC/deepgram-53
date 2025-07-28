@@ -1,0 +1,217 @@
+/* Deepgram base styles (provided) */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { background-color: #121212; height: 100%; }
+.app {
+  background-color: #121212;
+  color: #ffffff;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 2rem;
+  font-family: sans-serif;
+}
+.header { margin-top: 30px; margin-bottom: 1rem; }
+.file-upload { display: flex; gap: 2rem; margin-bottom: 2rem; justify-content: center; }
+.file-label { display: flex; flex-direction: column; align-items: center; gap: 0.5rem; font-size: 0.9rem; }
+.file-input {
+  background-color: #000;
+  color: #fff;
+  font-weight: bold;
+  padding: 1rem 2rem;
+  border-radius: 8px;
+  font-size: 1rem;
+  border: 2px solid transparent;
+  background-image: linear-gradient(#000, #000),
+                    linear-gradient(90deg, rgb(32, 28, 255) -91.5%, rgb(19, 239, 149) 80.05%);
+  background-origin: border-box;
+  background-clip: padding-box, border-box;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(19, 239, 149, 0.3);
+}
+.file-input::-webkit-file-upload-button { visibility: hidden; }
+.file-input::before { content: 'Choose File'; display: inline-block; color: #fff; }
+.video-container { margin-bottom: 1rem; }
+.transcript-box {
+  width: 80%;
+  max-width: 700px;
+  padding: 1rem;
+  background-color: #1e1e1e;
+  border-radius: 10px;
+  min-height: 60px;
+  white-space: pre-wrap;
+  line-height: 1.6;
+  font-weight: bold;
+  font-size: 1.1rem;
+  color: #ffffff;
+  border: 2px solid silver;
+  text-align: center;
+}
+
+/* show the search indicator when HTMX toggles the htmx-request class */
+#search-indicator { display: none; }
+#search-indicator.htmx-request { display: block; }
+
+/* Small addition for the HTMX search loading bar */
+#search-indicator.htmx-request #search-progress-bar {
+  width: 60%;
+}
+
+/* ===== Deepgram-styled buttons ===== */
+
+
+
+
+/* -----------------------------------------------------------
+   Content-dev style add-on (cards, buttons, chips, sections)
+   Merges with your Tailwind-based classes used in app.py.
+   ----------------------------------------------------------- */
+
+/* Header spacing consistency */
+.header {
+  margin-top: 30px;
+  margin-bottom: 1rem;
+}
+
+/* Section shell to keep panels visually consistent */
+.dg-section {
+  width: 100%;
+  max-width: 800px;
+  background-color: #1e1e1e;   /* matches dev .section */
+  border: 2px solid #333;
+  border-radius: 10px;
+}
+
+/* Generic card surface (used by ingest + results) */
+.dg-card {
+  background-color: #1e1e1e;   /* dev card tone */
+  border: 2px solid #333;
+  border-radius: 10px;
+  transition: box-shadow .25s ease, border-color .25s ease;
+}
+.dg-card:hover {
+  border-color: #13ef95;
+  box-shadow: 0 4px 12px rgba(19, 239, 149, 0.2);
+}
+
+/* Deepgram button (gradient border look) */
+.dg-btn {
+  background-color: #000;
+  color: #fff;
+  font-weight: 700;
+  padding: 0.85rem 1.25rem;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  border: 2px solid transparent;                     /* key for gradient border */
+  background-image: linear-gradient(#000, #000),
+    linear-gradient(90deg, rgb(32, 28, 255) -91.5%, rgb(19, 239, 149) 80.05%);
+  background-origin: border-box;
+  background-clip: padding-box, border-box;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(19, 239, 149, 0.3);
+  transition: box-shadow .25s ease, transform .12s ease;
+  width: 100%;
+}
+.dg-btn:hover { box-shadow: 0 6px 16px rgba(19, 239, 149, 0.5); transform: translateY(-1px); }
+.dg-btn--primary { /* alias for main actions */ }
+.dg-btn--play { width: auto; padding: .35rem .6rem; font-size: .8rem; }
+
+/* Small pill chip (speaker tag) */
+.dg-chip {
+  display: inline-block;
+  padding: .15rem .45rem;
+  font-size: .72rem;
+  border-radius: .5rem;
+  background-color: #0b0f14;
+  color: #e5e7eb;
+  border: 1px solid #1f2937;
+}
+
+/* Transcript details styling parity with dev version */
+.details-summary { cursor: pointer; font-weight: 700; color: #13ef95; padding: .5rem 0; border-bottom: 1px solid #333; margin-bottom: .5rem; }
+.details-content { background-color: #2a2a2a; padding: 1rem; border-radius: 8px; margin-top: .5rem; border: 1px solid #444; }
+
+/* Results container/card parity (optional extra polish) */
+.results-container { width: 100%; max-width: 800px; }
+.result-item { background-color: #1e1e1e; border: 2px solid #333; border-radius: 10px; padding: 1rem; }
+.similarity-score { color: #13ef95; font-weight: 700; font-size: .85rem; }
+
+/* Ensure HTMX progress bar shows while searching */
+#search-indicator { display: none; }
+#search-indicator.htmx-request { display: block; }
+#search-indicator.htmx-request #search-progress-bar { width: 60%; }
+
+
+/* --- Unify card/section borders to look the same everywhere --- */
+.dg-card,
+.dg-section {
+  background-color: #1e1e1e;
+  border: 2px solid #333;
+  border-radius: 10px;
+}
+
+/* Keep the subtle hover from the dev style */
+.dg-card:hover,
+.dg-section:hover {
+  border-color: #13ef95;
+  box-shadow: 0 4px 12px rgba(19, 239, 149, 0.2);
+}
+
+/* Buttons (already referenced via dg-btn/dg-btn--primary and dg-btn--play) */
+.dg-btn {
+  background-color: #000;
+  color: #fff;
+  font-weight: 700;
+  padding: 0.85rem 1.25rem;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  border: 2px solid transparent;
+  background-image: linear-gradient(#000, #000),
+    linear-gradient(90deg, rgb(32, 28, 255) -91.5%, rgb(19, 239, 149) 80.05%);
+  background-origin: border-box;
+  background-clip: padding-box, border-box;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(19, 239, 149, 0.3);
+  transition: box-shadow .25s ease, transform .12s ease;
+}
+.dg-btn:hover { box-shadow: 0 6px 16px rgba(19, 239, 149, 0.5); transform: translateY(-1px); }
+.dg-btn--primary { width: 100%; }
+.dg-btn--play { width: auto; padding: .35rem .6rem; font-size: .8rem; }
+
+/* “Processing Complete (click to expand)” styling */
+.details-summary {
+  cursor: pointer;
+  font-weight: 700;
+  color: #13ef95;
+  padding: .5rem 0;
+  border-bottom: 1px solid #333;
+  margin-bottom: .5rem;
+}
+.details-content {
+  background-color: #2a2a2a;
+  padding: 1rem;
+  border-radius: 8px;
+  margin-top: .5rem;
+  border: 1px solid #444;
+}
+
+/* Result list parity (optional) */
+.result-item { transition: box-shadow .25s ease, border-color .25s ease; }
+.similarity-score { color: #13ef95; font-weight: 700; font-size: .85rem; }
+
+.controls-row {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-end; /* keeps the slider baseline aligned with the select */
+  margin-bottom: 1rem;
+}
+.control-group { flex: 1; }
+.control-group label {
+  display: block;
+  margin-bottom: .5rem;
+  font-weight: 600;
+  color: #cccccc;
+}
+
+/* inline utility for small, auto-width buttons inside form rows */
+.dg-btn--inline { width:auto; padding:.45rem .7rem; font-size:.85rem; border-radius:8px; }
