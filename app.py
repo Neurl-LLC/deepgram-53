@@ -318,7 +318,7 @@ def homepage():
                 hx_target="#ingest-container",      # Returned HTML fragment will be inserted here
                 hx_indicator="#loading-indicator",   # Show spinner while request is in-flight
             ),
-            cls="mb-8 bg-dg-card p-6 rounded-lg shadow-soft border border-dg-border",
+            cls="dg-section mb-8 p-6 shadow-soft bg-dg-card",
         ),
 
         # URL processing form (download remote MP3/WAV and process it)
@@ -344,7 +344,7 @@ def homepage():
                 hx_target="#ingest-container",
                 hx_indicator="#loading-indicator",
             ),
-            cls="mb-8 bg-dg-card p-6 rounded-lg shadow-soft border border-dg-border",
+            cls="dg-section mb-8 p-6 shadow-soft bg-dg-card",
         ),
 
         # Search form (semantic search via query embeddings)
@@ -359,7 +359,7 @@ def homepage():
                         placeholder="What are you looking for in the archives?",
                         cls="w-full p-3 border border-dg-border rounded-lg focus:ring-2 focus:ring-dg-primary focus:border-transparent bg-black/30 text-gray-100",
                     ),
-                    cls="mb-8 bg-dg-card p-6 rounded-lg shadow-soft border border-dg-border",
+                    cls="dg-card mb-8 p-6 shadow-soft bg-dg-card",
                 ),
                 
                 # 🔽 Put results *here*, right after the search form (so users see them immediately)
@@ -422,7 +422,7 @@ def homepage():
                 hx_target="#search-results",
                 hx_indicator="#search-indicator",   # 👈 tie the indicator to this form
             ),
-            cls="mb-8 bg-dg-card p-6 rounded-lg shadow-soft border border-dg-border",
+            cls="dg-section mb-8 p-6 shadow-soft bg-dg-card",
         ),
 
         # Global loading indicator (shown via HTMX hx_indicator)
@@ -441,7 +441,7 @@ def homepage():
         Div(id="ingest-container", cls="mt-8"),
 
         # Target container for search results (separate so Play can still find #player)
-        Div(id="search-results", cls="mt-8"),
+        #Div(id="search-results", cls="mt-8"),
 
         cls="app max-w-4xl mx-auto p-6 bg-dg-dark min-h-screen text-gray-100",
     )
@@ -747,7 +747,7 @@ def search_archives(
                     id_line,
                     cls="p-4",
                 ),
-                cls="bg-dg-card border border-dg-border rounded-lg shadow-soft",
+                cls="dg-card result-item bg-dg-card",
             )
             result_cards.append(card)
 
@@ -790,46 +790,48 @@ def get_audio(session_id: str):
 # Small helpers to build nicely-styled cards/snippets
 # ------------------------------------------------------------------------------
 def success_response(session_id: str, transcript: str, filename: str, segments_count: int):
-    """Return a success 'card' after processing, including transcript preview and audio player."""
-    return Details(
-        Summary("✅ Processing Complete (click to expand)", cls="cursor-pointer font-medium text-green-400"),
-        Div(
-            # (Your existing card content, unchanged)
-            H3("✅ Processing Complete!", cls="text-xl font-semibold mb-4 text-green-400"),
-            Div(Strong("File: "), filename, cls="mb-2 text-gray-200"),
-            Div(Strong("Segments stored: "), str(segments_count), cls="mb-4 text-gray-200"),
-
-            # Audio player (stays in DOM even when collapsed; Play buttons will still find #player)
+    """
+    Renders a success 'card' after processing, including transcript preview and audio player.
+    """
+    return Div(
+        Details(
+            Summary("✅ Processing Complete (click to expand)", cls="details-summary"),
             Div(
-                Audio(
-                    Source(src=f"/audio/{session_id}"),    # pass as a positional child
-                    controls=True,
-                    id="player",
-                    cls="w-full",
-                ),
-                P("Tip: use the ▶ buttons on results to jump to the exact moment.", cls="text-xs text-gray-400 mt-1"),
-                cls="mb-4",
-            ),
+                Div(Strong("File: "), filename, cls="mb-2 text-gray-200"),
+                Div(Strong("Segments stored: "), str(segments_count), cls="mb-4 text-gray-200"),
 
-            Details(
-                Summary("📝 View Transcript", cls="cursor-pointer font-medium text-dg-primary hover:opacity-90"),
                 Div(
-                    Pre(
-                        transcript,
-                        cls=(
-                            "bg-black/40 p-4 rounded mt-2 text-sm "
-                            "overflow-auto w-full max-w-full max-h-[60vh] "
-                            "border border-dg-border whitespace-pre-wrap break-words"
-                        ),
+                    Audio(
+                        Source(src=f"/audio/{session_id}"),
+                        controls=True,
+                        id="player",
+                        cls="w-full",
                     ),
-                    cls="mt-2 w-full",
+                    P("Tip: use the ▶ buttons on results to jump to the exact moment.", cls="text-xs text-gray-400 mt-1"),
+                    cls="mb-4",
                 ),
-                cls="mb-4",
+
+                Details(
+                    Summary("📝 View Transcript", cls="details-summary"),
+                    Div(
+                        Pre(
+                            transcript,
+                            cls=(
+                                "bg-black/40 p-4 rounded mt-2 text-sm "
+                                "overflow-auto w-full max-w-full max-h-[60vh] "
+                                "whitespace-pre-wrap break-words"
+                            ),
+                        ),
+                        cls="details-content",
+                    ),
+                    cls="mb-2",
+                ),
+
+                P("✨ Your audio has been processed and added to the searchable archive!", cls="text-green-400 font-medium"),
+                cls="p-2",
             ),
-            P("✨ Your audio has been processed and added to the searchable archive!", cls="text-green-400 font-medium"),
-            cls="p-4",
         ),
-        cls="bg-dg-card border border-dg-border rounded-lg shadow-soft"
+        cls="dg-card bg-dg-card p-4"
     )
 
 def error_response(message: str):
