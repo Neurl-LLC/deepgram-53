@@ -132,23 +132,15 @@ http://localhost:5001
 
 ## 🏗️ Architecture
 
-### Core Components
-
-```
-📦 Voice Archive System
-├── 🎙️ voice_archive.py      # Core transcription & embedding logic
-├── 🌐 app.py               # FastHTML web interface
-```
-
 ### Processing Pipeline
 
 ```mermaid
 graph TD
-    A[Audio Input (.wav/.mp3)] --> B[Deepgram STT (Nova‑3)]
+    A[Audio Input (wav/.mp3)] --> B[Deepgram STT (Nova‑3)]
     B --> C[Word timestamps + diarization]
     C --> D[Segmentation (pauses, speaker turns, max duration)]
     D --> E[PII Redaction (regex) - optional]
-    E --> F[Cohere Embeddings (embed-v4.0)]
+    E --> F[Cohere Embeddings (embed-v4)]
     F --> G[Pinecone Upsert (text + timestamps + speaker + file + session)]
     G --> H[Searchable Vector Archive]
 
