@@ -136,9 +136,9 @@ http://localhost:5001
 
 ```mermaid
 graph TD
-    A[Audio Input (wav, mp3)] --> B[Deepgram STT (Nova‑3)]
+    A[Audio Input] --> B[Deepgram Nova‑3 STT]
     B --> C[Word timestamps + diarization]
-    C --> D[Segmentation (pauses, speaker turns, max duration)]
+    C --> D[Segmentation (pauses - speaker turns - max duration)]
     D --> E[PII Redaction (regex) - optional]
     E --> F[Cohere Embeddings (embed-v4)]
     F --> G[Pinecone Upsert (text + timestamps + speaker + file + session)]
