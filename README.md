@@ -138,14 +138,14 @@ http://localhost:5001
 graph TD
     A[Audio Input] --> B[Deepgram Nova‑3 STT]
     B --> C[Word timestamps + diarization]
-    C --> D[Segmentation - "pauses," "speaker turns," "max duration"]
+    C --> D[Segmentation]
     D --> E[PII Redaction]
-    E --> F[Cohere Embeddings "embed-v4"]
+    E --> F[Cohere Embeddings embed-v4]
     F --> G[Pinecone Upsert]
     G --> H[Searchable Vector Archive]
 
     Q[User Query] --> QE[Query Embedding]
-    QE --> R[Pinecone Query "fetch K"]
+    QE --> R[Pinecone Query]
     R --> MMR[De‑dupe + MMR Rerank]
     MMR --> SR[Top‑K Diverse Results]
 ```
