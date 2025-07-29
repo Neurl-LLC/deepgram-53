@@ -121,11 +121,20 @@ def _guess_mimetype(path: str) -> str:
     """
     mt, _ = mimetypes.guess_type(path)
     if mt:
+        mt = mt.lower()
+        # Normalize the many WAV aliases to audio/wav
+        if mt in ("audio/wav", "audio/x-wav", "audio/wave", "audio/x-pn-wav", "audio/vnd.wave"):
+            return "audio/wav"
+        # Normalize MP3 aliases to audio/mpeg
+        if mt in ("audio/mpeg", "audio/mp3", "audio/mpeg3", "audio/x-mp3", "audio/x-mpeg"):
+            return "audio/mpeg"
         return mt
+
+    # Fallback by extension if guess_type returns None
     ext = os.path.splitext(path)[1].lower()
-    if ext in (".wav", ".wave"):
+    if ext in (".wav", ".wave", ".wav64", ".bwav"):
         return "audio/wav"
-    if ext == ".mp3":
+    if ext in (".mp3",):
         return "audio/mpeg"
     return "application/octet-stream"
 
