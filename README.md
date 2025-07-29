@@ -136,7 +136,7 @@ http://localhost:5001
 
 ```mermaid
 graph TD
-    A[Audio Input (wav/mp3)] --> B[Deepgram STT (Nova‑3)]
+    A[Audio Input (wav, mp3)] --> B[Deepgram STT (Nova‑3)]
     B --> C[Word timestamps + diarization]
     C --> D[Segmentation (pauses, speaker turns, max duration)]
     D --> E[PII Redaction (regex) - optional]
